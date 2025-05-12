@@ -39,19 +39,7 @@ app.get('/stocks/:ticker', async (req, res) => {
   res.json(response.data);
 });
 
-app.get('/stocks/:ticker/aggregate', async (req, res) => {
-  const { ticker } = req.params;
-  const minutes = req.query.minutes;
-  const token = await getToken();
-  const url = `${BASE_URL}/stocks/${ticker}?minutes=${minutes}`;
-  const response = await axios.get(url, {
-    headers: { Authorization: `Bearer ${token} `}
-  });
-  const history = response.data;
-  const prices = history.map(h => h.price);
-  const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
-  res.json({ averageStockPrice: avg, priceHistory: history });
-});
+
 
 app.get('/stockcorrelation', async (req, res) => {
   const { ticker: tickers, minutes } = req.query;
@@ -63,14 +51,6 @@ app.get('/stockcorrelation', async (req, res) => {
       headers: { Authorization: `Bearer ${token}` }
     }))
   );
-
-  const [X, Y] = responses.map(r => r.data.map(p => p.price));
-  const avgX = X.reduce((a, b) => a + b) / X.length;
-  const avgY = Y.reduce((a, b) => a + b) / Y.length;
-  const cov = X.reduce((sum, xi, i) => sum + (xi - avgX) * (Y[i] - avgY), 0) / (X.length - 1);
-  const stdX = Math.sqrt(X.reduce((sum, xi) => sum + (xi - avgX) ** 2, 0) / (X.length - 1));
-  const stdY = Math.sqrt(Y.reduce((sum, yi) => sum + (yi - avgY) ** 2, 0) / (Y.length - 1));
-  const correlation = cov / (stdX * stdY);
 
   res.json({
     correlation,
